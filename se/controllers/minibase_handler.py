@@ -19,7 +19,6 @@ from tornado import web
 import json
 import os
 import time
-from se.common.utility import CUtility
 
 class MiniBaseHandler(web.RequestHandler):
     def set_default_headers(self):
