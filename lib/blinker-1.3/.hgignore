@@ -1,0 +1,18 @@
+syntax: glob
+
+.coverage
+.tox
+nosetests3
+bench
+*.py?
+build
+dist
+MANIFEST
+docs/text
+docs/html
+docs/doctrees
+docs/doctest
+docs/pickles
+docs/source/_static
+docs/source/_template
+docs/website
