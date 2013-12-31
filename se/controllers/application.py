@@ -17,7 +17,7 @@
 
 from tornado import web
 from se import config, logger
-from pubsub_handler import PubHandler, SubHandler
+from pubsub_handler import PubHandler, SubHandler, PubsHandler, SubsHandler
 from log_handler import LogHandler
 import os
 import uuid
@@ -75,8 +75,14 @@ class SEApplication(web.Application):
         if config.has_section("services"):
             if config.has_option("services", "enable_pub") and \
                             config.get("services", "enable_pub", "0") == "1":
-                handlers.append(((r"/api/1/sub/(.+)"), SubHandler))
-                handlers.append(((r"/api/1/pub/(.+)"), PubHandler))
+                handlers.append(((r"/sub/(.+)"), SubHandler))
+                handlers.append(((r"/pub/(.+)"), PubHandler))
+                
+                #
+                # 批量订阅支持
+                #
+                handlers.append(((r"/subs"), SubsHandler))
+                handlers.append(((r"/pubs"), PubsHandler))
 
         handlers.append(((r"/logs"), LogHandler))
         host_pattern = ".*$"

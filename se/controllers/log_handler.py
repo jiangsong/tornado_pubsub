@@ -26,7 +26,7 @@ class LogHandler(web.RequestHandler):
         响应get请求，用以查询统计数量
         :return:
         """
-        self.render("log/test.html", logs=reversed(self.application.log_caches))
+        self.render("log/logs.html", logs=reversed(self.application.log_caches))
 
     @web.asynchronous
     def post(self):

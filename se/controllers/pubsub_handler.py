@@ -74,3 +74,75 @@ class SubHandler(MiniBaseHandler):
         #
         if self.message_id and self.receive_id:
              sig_pub_sub.disconnect(self.receive_id)
+
+
+class PubsHandler(MiniBaseHandler):
+    def post(self):
+        return self._handle_pubs()
+    
+    def get(self):
+        return self._handle_pubs()
+    
+    def _handle_pubs(self):
+        """
+        @summary: 向指定的消息频道广播消息
+
+        @param chanel_id: 频道编码
+        @return:
+        """
+        chanel_ids  = self.get_argument("chanelid", '')
+        chanel_list = chanel_ids.split('|')
+        message     = self.get_argument("message", chanel_ids)
+        receivers   = []
+        for chanel_id in chanel_list:
+            receiver = self.application.pub_sub.pubish(
+                chanel_id,
+                message)
+            receivers.append(receiver)
+
+        self.send_result(
+            True,
+            chanel_id=chanel_ids,
+            receivers=len(receivers))
+
+
+class SubsHandler(MiniBaseHandler):
+    @web.asynchronous
+    def get(self):
+        self.handle_subs()
+        
+    @web.asynchronous
+    def post(self):
+        self.handle_subs()
+
+    def handle_subs(self):
+        chanel_ids          = self.get_argument("chanelid", '')
+        self.message_ids    = chanel_ids.split('|')
+        self.receive_ids    = []
+        for message_id in self.message_ids:
+            receive_id = self.application.pub_sub.subscribe(
+                message_id,
+                self.on_message)
+            self.receive_ids.append(receive_id)
+
+    def on_message(self, sender, **kw):
+        """
+        @summary: 响应监控消息
+
+        @param sender:
+        @param kw:
+        @return:
+        """
+        if self.request.connection.stream.closed() or self._finished:
+            return
+
+        if sender in self.receive_ids:
+            return
+
+        message = kw.get("message", "no")
+        self.finish(message)
+        #
+        # 释放监控对象
+        #
+        for receive_id in self.receive_ids:
+             sig_pub_sub.disconnect(receive_id)
