@@ -19,8 +19,14 @@ from tornado import web
 import json
 import os
 import time
+from se.auth import TrustIPAuth
 
-class MiniBaseHandler(web.RequestHandler):
+class MiniBaseHandler(web.RequestHandler,
+    TrustIPAuth):
+    def __init__(self, application, request, **kwargs):
+        web.RequestHandler.__init__(self, application, request, **kwargs)
+        self.request.remote_ip = self.request.headers.get("X-Forwarded-For", self.request.remote_ip)
+
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Credentials", "true")
         self.set_header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS")
@@ -62,17 +68,4 @@ class MiniBaseHandler(web.RequestHandler):
         #
         self.set_header('Content-Type', 'text/plain')
         self.finish(callbackParae + '(' + json.dumps(ret_json) + ')')
-
-class Crossdomain(web.RequestHandler):
-    """
-    @summary: Flash upload 跨域配置文件
-    """
-    def get(self):
-        self.write("""
-        <?xml version="1.0"?>
-        <cross-domain-policy>
-          <allow-access-from domain="*" />
-        </cross-domain-policy>
-        """)
-        self.finish()
 

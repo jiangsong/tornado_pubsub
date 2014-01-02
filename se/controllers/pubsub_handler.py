@@ -21,13 +21,43 @@ from minibase_handler import MiniBaseHandler
 
 
 class PubHandler(MiniBaseHandler):
+    @web.asynchronous
+    def post(self, chanel_id):
+        """
+        @summary: 响应post消息
+
+        @param 无
+        @return:
+        """
+        self.chanel_id = chanel_id
+        self.get_authenticated_user(self.request.remote_ip,
+            self.application.trust_ips,
+            self.async_callback(self._handle_pub))
+
+    @web.asynchronous
     def get(self, chanel_id):
+        """
+        @summary: 响应get消息
+
+        @param 无
+        @return:
+        """
+        self.chanel_id = chanel_id
+        self.get_authenticated_user(self.request.remote_ip,
+            self.application.trust_ips,
+            self.async_callback(self._handle_pub))
+
+    def _handle_pub(self, user):
         """
         @summary: 向指定的消息频道广播消息
 
         @param chanel_id: 频道编码
         @return:
         """
+        if not user or not user.get('can_read', False):
+            raise web.HTTPError(403)
+
+        chanel_id = self.chanel_id
         message = self.get_argument("message", chanel_id)
         receivers = self.application.pub_sub.pubish(
             chanel_id,
@@ -77,19 +107,40 @@ class SubHandler(MiniBaseHandler):
 
 
 class PubsHandler(MiniBaseHandler):
+    @web.asynchronous
     def post(self):
-        return self._handle_pubs()
+        """
+        @summary: 响应post消息
+
+        @param 无
+        @return:
+        """
+        self.get_authenticated_user(self.request.remote_ip, 
+            self.application.trust_ips,
+            self.async_callback(self._handle_pubs))
     
+    @web.asynchronous
     def get(self):
-        return self._handle_pubs()
+        """
+        @summary: 响应get消息
+
+        @param 无
+        @return:
+        """
+        self.get_authenticated_user(self.request.remote_ip,
+            self.application.trust_ips,
+            self.async_callback(self._handle_pubs))
     
-    def _handle_pubs(self):
+    def _handle_pubs(self, user):
         """
         @summary: 向指定的消息频道广播消息
 
         @param chanel_id: 频道编码
         @return:
         """
+        if not user or not user.get('can_read', False):
+            raise web.HTTPError(403)
+
         chanel_ids  = self.get_argument("chanelid", '')
         chanel_list = chanel_ids.split('|')
         message     = self.get_argument("message", chanel_ids)

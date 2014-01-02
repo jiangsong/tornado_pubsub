@@ -43,6 +43,7 @@ class SEApplication(web.Application):
         # 缓存系统
         #
         self.pub_sub = PubSubManager(self)
+        self.trust_ips = ["127.0.0.1"]
 
     def init(self):
         """
@@ -61,6 +62,18 @@ class SEApplication(web.Application):
         # 初始化redis监控句柄
         #
         self.pub_sub.init()
+        
+        if not config.has_section("system"):
+            return ret
+        if not config.has_option("system", "trust_ips"):
+            return ret
+        
+        trust_ips = config.get("system", "trust_ips", "0")
+        trust_ip_list = trust_ips.split('|')
+        for ip in trust_ip_list:
+            if ip in self.trust_ips:
+                continue
+            self.trust_ips.append(ip)
         return ret
 
     def _init_handlers(self):
