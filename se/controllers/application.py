@@ -43,6 +43,7 @@ class SEApplication(web.Application):
         # 缓存系统
         #
         self.pub_sub = PubSubManager(self)
+        self.ip_auth = False
         self.trust_ips = ["127.0.0.1"]
 
     def init(self):
@@ -65,9 +66,18 @@ class SEApplication(web.Application):
         
         if not config.has_section("system"):
             return ret
+
+        #
+        # 添加ip检测开关量
+        #
+        if config.has_option("system", "enable_ip_auth"):
+            enable_ip_auth = config.get("system", "trust_ips", "false")
+            if enable_ip_auth == "true":
+                self.ip_auth = True
+
         if not config.has_option("system", "trust_ips"):
             return ret
-        
+
         trust_ips = config.get("system", "trust_ips", "0")
         trust_ip_list = trust_ips.split('|')
         for ip in trust_ip_list:

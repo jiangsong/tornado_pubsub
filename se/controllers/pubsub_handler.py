@@ -18,6 +18,7 @@
 from tornado import web
 from se.pubsub import sig_pub_sub
 from minibase_handler import MiniBaseHandler
+from se import config
 
 
 class PubHandler(MiniBaseHandler):
@@ -54,7 +55,8 @@ class PubHandler(MiniBaseHandler):
         @param chanel_id: 频道编码
         @return:
         """
-        if not user or not user.get('can_read', False):
+        if self.application.ip_auth and \
+                not user or not user.get('can_read', False):
             raise web.HTTPError(403)
 
         chanel_id = self.chanel_id
