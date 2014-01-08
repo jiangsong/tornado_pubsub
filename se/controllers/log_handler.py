@@ -18,6 +18,7 @@
 from tornado import web
 from se.pubsub import sig_logs
 import traceback
+import time
 
 
 class LogHandler(web.RequestHandler):
@@ -57,3 +58,18 @@ class LogHandler(web.RequestHandler):
         if logs is None:
             return
         self.finish(dict(logs=logs))
+
+class WatchHandler(web.RequestHandler):
+    def get(self):
+        """
+        响应get请求，用以查询统计数量
+        :return:
+        """
+        if len(self.application.pub_sub.sub_dicts) <= 0:
+            self.finish("no new watch items")
+            return
+
+        current_time = time.time()
+        for k, (chanel_id, start_time) in self.application.pub_sub.sub_dicts.iteritems():
+            str = "ChanelID:%s -- UsedTime:%d<BR>" % (chanel_id, current_time - start_time)
+            self.write(str)

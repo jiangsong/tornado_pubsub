@@ -18,7 +18,7 @@
 from tornado import web
 from se import config, logger
 from pubsub_handler import PubHandler, SubHandler, PubsHandler, SubsHandler
-from log_handler import LogHandler
+from log_handler import LogHandler, WatchHandler
 import os
 import uuid
 import tornado
@@ -108,6 +108,7 @@ class SEApplication(web.Application):
                 handlers.append(((r"/pubs"), PubsHandler))
 
         handlers.append(((r"/logs"), LogHandler))
+        handlers.append(((r"/watch"), WatchHandler))
         host_pattern = ".*$"
         if len(handlers) <= 0:
             return False

@@ -16,9 +16,8 @@
 # under the License.
 
 from tornado import web
-from se.pubsub import sig_pub_sub
 from minibase_handler import MiniBaseHandler
-from se import config
+from se import logger
 
 
 class PubHandler(MiniBaseHandler):
@@ -73,6 +72,7 @@ class PubHandler(MiniBaseHandler):
 class SubHandler(MiniBaseHandler):
     @web.asynchronous
     def get(self, message_id):
+        logger.info("received %s sub request", message_id)
         self.message_id = message_id
         self.receive_id = self.application.pub_sub.subscribe(
             self.message_id,
@@ -105,7 +105,16 @@ class SubHandler(MiniBaseHandler):
         # 释放监控对象
         #
         if self.message_id and self.receive_id:
-             sig_pub_sub.disconnect(self.receive_id)
+            self.application.pub_sub.unsubscribe(self.receive_id)
+
+    def on_connection_close(self):
+        """
+        @summary: 响应连接关闭逻辑
+
+        @param 无
+        @return:
+        """
+        self.application.pub_sub.unsubscribe(self.receive_id)
 
 
 class PubsHandler(MiniBaseHandler):
@@ -170,6 +179,7 @@ class SubsHandler(MiniBaseHandler):
 
     def handle_subs(self):
         chanel_ids          = self.get_argument("chanelid", '')
+        logger.info("received %s subs request", chanel_ids)
         self.message_ids    = chanel_ids.split('|')
         self.receive_ids    = []
         for message_id in self.message_ids:
@@ -198,4 +208,4 @@ class SubsHandler(MiniBaseHandler):
         # 释放监控对象
         #
         for receive_id in self.receive_ids:
-             sig_pub_sub.disconnect(receive_id)
+            self.application.pub_sub.unsubscribe(receive_id)

@@ -49,6 +49,7 @@ class PubSubManager(object):
             self.redis_pub = None
             
             self.chanel_message = {}
+            self.sub_dicts      = {}
 
     @tornado.gen.engine
     def init(self):
@@ -150,6 +151,12 @@ class PubSubManager(object):
         receiver_id = sig_pub_sub.connect(
             receiver,
             chanel_id)
+
+        #
+        # 记录到字典中
+        #
+        old_str, _ = self.sub_dicts.get(receiver_id, (" ", 0))
+        self.sub_dicts[receiver_id] = (old_str + " " + chanel_id, time.time())
         return receiver_id
 
     def unsubscribe(self, receiver_id):
@@ -159,7 +166,12 @@ class PubSubManager(object):
         @param receiver_id:
         @return:
         """
+        if receiver_id is None:
+            return
+        if not self.sub_dicts.has_key(receiver_id):
+            return
         sig_pub_sub.disconnect(receiver_id)
+        del self.sub_dicts[receiver_id]
 
     def _periodic_callback(self):
         """
