@@ -74,9 +74,16 @@ class SubHandler(MiniBaseHandler):
     def get(self, message_id):
         logger.info("received %s sub request", message_id)
         self.message_id = message_id
+        #
+        # 重置连接关闭回调函数
+        #
+        if getattr(self.request, "connection", None):
+            self.request.connection.set_close_callback(
+                self.on_connection_close)
         self.receive_id = self.application.pub_sub.subscribe(
             self.message_id,
             self.on_message)
+
 
     @web.asynchronous
     def post(self, message_id):
@@ -178,6 +185,12 @@ class SubsHandler(MiniBaseHandler):
         self.handle_subs()
 
     def handle_subs(self):
+        #
+        # 重置连接关闭回调函数
+        #
+        if getattr(self.request, "connection", None):
+            self.request.connection.set_close_callback(
+                self.on_connection_close)
         chanel_ids          = self.get_argument("chanelid", '')
         logger.info("received %s subs request", chanel_ids)
         self.message_ids    = chanel_ids.split('|')
