@@ -132,7 +132,7 @@ class PubSubManager(object):
         logger.info("have %d receivers", len(receivers))
         return receivers
 
-    def subscribe(self, chanel_id, receiver):
+    def subscribe(self, handler, chanel_id, receiver):
         """
         @summary: 针对制定频道发布消息
 
@@ -155,8 +155,8 @@ class PubSubManager(object):
         #
         # 记录到字典中
         #
-        old_str, _ = self.sub_dicts.get(receiver_id, (" ", 0))
-        self.sub_dicts[receiver_id] = (old_str + " " + chanel_id, time.time())
+        old_str, _, _ = self.sub_dicts.get(receiver_id, (" ", 0, None))
+        self.sub_dicts[receiver_id] = (old_str + " " + chanel_id, time.time(), handler)
         return receiver_id
 
     def unsubscribe(self, receiver_id):
@@ -179,6 +179,22 @@ class PubSubManager(object):
 
         @return: 无
         """
+        #
+        # 释放超时消息
+        #
+        self._release_chanel_message()
+
+        #
+        # 释放无效超时句柄
+        #
+        self._release_chanel_handler()
+
+    def _release_chanel_message(self):
+        """
+        释放超时消息
+
+        :return:
+        """
         current_time = time.clock()
         for k, v in self.chanel_message.items():
             i = 0
@@ -193,3 +209,28 @@ class PubSubManager(object):
 
             if len(v) <= 0:
                 del self.chanel_message[k]
+
+    def _release_chanel_handler(self):
+        """
+        释放超时消息
+
+        :return:
+        """
+        current_time = time.clock()
+
+        for receive_id in self.sub_dicts.keys():
+            (chanel_id, start_time, handler) = self.sub_dicts[receive_id]
+            diff_time = current_time - start_time
+
+            #
+            # 连接已经关闭
+            #
+            if handler == None or handler.request.connection.stream._closed == True:
+                logger.info("remove closed sub chanel id:%s", chanel_id)
+                self.unsubscribe(receive_id)
+                continue
+            if diff_time > self.pubsub_timeout:
+                self.unsubscribe(receive_id)
+                continue
+
+            pass

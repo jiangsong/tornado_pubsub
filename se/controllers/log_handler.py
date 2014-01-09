@@ -70,6 +70,6 @@ class WatchHandler(web.RequestHandler):
             return
 
         current_time = time.time()
-        for k, (chanel_id, start_time) in self.application.pub_sub.sub_dicts.iteritems():
+        for k, (chanel_id, start_time, _) in self.application.pub_sub.sub_dicts.iteritems():
             str = "ChanelID:%s -- UsedTime:%d<BR>" % (chanel_id, current_time - start_time)
             self.write(str)

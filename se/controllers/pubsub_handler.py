@@ -81,6 +81,7 @@ class SubHandler(MiniBaseHandler):
             self.request.connection.set_close_callback(
                 self.on_connection_close)
         self.receive_id = self.application.pub_sub.subscribe(
+            self,
             self.message_id,
             self.on_message)
 
@@ -89,6 +90,7 @@ class SubHandler(MiniBaseHandler):
     def post(self, message_id):
         self.message_id = message_id
         self.receive_id = self.application.pub_sub.subscribe(
+            self,
             self.message_id,
             self.on_message)
 
@@ -197,6 +199,7 @@ class SubsHandler(MiniBaseHandler):
         self.receive_ids    = []
         for message_id in self.message_ids:
             receive_id = self.application.pub_sub.subscribe(
+                self,
                 message_id,
                 self.on_message)
             self.receive_ids.append(receive_id)
