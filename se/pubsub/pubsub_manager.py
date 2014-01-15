@@ -156,7 +156,7 @@ class PubSubManager(object):
         # 记录到字典中
         #
         old_str, _, _ = self.sub_dicts.get(receiver_id, (" ", 0, None))
-        self.sub_dicts[receiver_id] = (old_str + " " + chanel_id, time.time(), handler)
+        self.sub_dicts[receiver_id] = (old_str + " " + chanel_id, time.clock(), handler)
         return receiver_id
 
     def unsubscribe(self, receiver_id):
