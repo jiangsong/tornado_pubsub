@@ -54,6 +54,7 @@ class PubSubManager(object):
     @tornado.gen.engine
     def init(self):
         self.pubsub_timeout = int(config.get('system', 'pubsub_timeout'), 0)
+        self.loop_count = 100
         self.job_periodic = tornado.ioloop.PeriodicCallback(self._periodic_callback, 1000)
         self.job_periodic.start()
 
@@ -126,7 +127,7 @@ class PubSubManager(object):
         #
         if len(receivers) <= 0:
             message_list = self.chanel_message.get(chanel_id, [])
-            message_list.append((body, time.clock()))
+            message_list.append((body, time.time()))
             self.chanel_message[chanel_id] = message_list
 
         logger.info("have %d receivers", len(receivers))
@@ -156,7 +157,7 @@ class PubSubManager(object):
         # 记录到字典中
         #
         old_str, _, _ = self.sub_dicts.get(receiver_id, (" ", 0, None))
-        self.sub_dicts[receiver_id] = (old_str + " " + chanel_id, time.clock(), handler)
+        self.sub_dicts[receiver_id] = (old_str + " " + chanel_id, time.time(), handler)
         return receiver_id
 
     def unsubscribe(self, receiver_id):
@@ -195,20 +196,40 @@ class PubSubManager(object):
 
         :return:
         """
-        current_time = time.clock()
+        loop_count2 = 1
+        current_time = time.time()
         for k, v in self.chanel_message.items():
             i = 0
+            loop_count1 += 1
             while i < len(v):
+                #
+                # 增加循环退出逻辑
+                #
+                loop_count1 += 1
+                if loop_count1 > self.loop_count:
+                    logger.warn("loop count exceed %d for _release_chanel_message_1", self.loop_count)
+                    break
+
                 (_, old_time) = v[i]
                 diff_time = current_time - old_time
                 if diff_time > self.pubsub_timeout:
+                    logger.warn("remove timeout for id:%s", str(k))
                     del v[i]
-                    continue
+                    #continue
+                    break
 
                 i += 1
 
             if len(v) <= 0:
                 del self.chanel_message[k]
+
+            #
+            # 增加循环退出逻辑
+            #
+            loop_count2 += 1
+            if loop_count2 > self.loop_count:
+                logger.warn("loop count exceed %d for _release_chanel_message_2", self.loop_count)
+                break
 
     def _release_chanel_handler(self):
         """
@@ -216,11 +237,16 @@ class PubSubManager(object):
 
         :return:
         """
-        current_time = time.clock()
+        current_time = time.time()
+        loop_count = 1
 
         for receive_id in self.sub_dicts.keys():
             (chanel_id, start_time, handler) = self.sub_dicts[receive_id]
             diff_time = current_time - start_time
+            loop_count += 1
+            if loop_count > self.loop_count:
+                logger.warn("loop count exceed %d for _release_chanel_handler", self.loop_count)
+                break
 
             #
             # 连接已经关闭

@@ -9,7 +9,7 @@ import logging.handlers #@UnusedImport
 def LogManager(
     path        = "pubsub.log",
     terminal    = True,
-    level       = logging.INFO):
+    level       = logging.WARNING):
     """
     获取日志处理类
     """
@@ -44,7 +44,7 @@ class CLogger(logging.Logger):
     def __init__(self, 
         path = "", 
         terminal = True,
-        level = logging.INFO):
+        level = logging.WARNING):
         """ Create singleton instance """
         if CLogger.__instance is None:
             #logging.Logger.__init__(self, os.path.basename(path), logging.DEBUG)
