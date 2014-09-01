@@ -24,6 +24,8 @@ import uuid
 import tornado
 import time
 from se.pubsub import PubSubManager, sig_logs
+from piwikapi.tracking import PiwikTracker
+from piwikapi.tests.request import FakeRequest
 
 
 class SEApplication(web.Application):
@@ -45,6 +47,7 @@ class SEApplication(web.Application):
         self.pub_sub = PubSubManager(self)
         self.ip_auth = False
         self.trust_ips = ["127.0.0.1"]
+        self.enable_piwik = False
 
     def init(self):
         """
@@ -63,6 +66,11 @@ class SEApplication(web.Application):
         # 初始化redis监控句柄
         #
         self.pub_sub.init()
+
+        #
+        # 初始化piwik统计模块
+        #
+        self._init_piwik()
         
         if not config.has_section("system"):
             return ret
@@ -92,8 +100,6 @@ class SEApplication(web.Application):
 
         @return: 初始化成功返回True，否则返回False
         """
-
-
         handlers = []
         if config.has_section("services"):
             if config.has_option("services", "enable_pub") and \
@@ -114,6 +120,23 @@ class SEApplication(web.Application):
             return False
 
         self.add_handlers(host_pattern, handlers)
+        return True
+
+    def _init_piwik(self):
+        """
+        @summary: 初始化统计模块piwik
+
+        @return: 初始化成功返回True，否则返回False
+        """
+        if not config.has_section("piwik") or \
+            not config.has_option("piwik", "enable"):
+            return False
+
+        enable_piwik = config.get("piwik", "enable", "false")
+        if enable_piwik != "true":
+            return True
+
+        self.enable_piwik = True
         return True
 
     def log_request(self, handler):

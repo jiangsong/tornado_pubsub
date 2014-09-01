@@ -27,6 +27,7 @@ EXTRA_PATHS = [
     os.path.join(DIR_PATH, 'lib', 'tornado-3.1'),
     os.path.join(DIR_PATH, 'lib', 'blinker-1.3'),
     os.path.join(DIR_PATH, 'lib', 'tornado-redis-2.4.7'),
+    os.path.join(DIR_PATH, 'lib', 'piwik-python-api'),
 ]
 
 def fix_sys_path(extra_extra_paths=()):

@@ -1,0 +1,12 @@
+*pyc
+*swp
+build
+dist
+*.egg-info
+*.sqlite
+apis
+piwikapi/tests/settings.py
+doc/_build
+doc/_static
+doc/_templates
+MANIFEST
